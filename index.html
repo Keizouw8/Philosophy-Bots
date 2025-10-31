@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script src="/socket.io/socket.io.min.js"></script>
+	<title>Why Can You See This</title>
+	<style>
+		body{
+			overflow: hidden;
+		}
+
+		*{
+			padding: 0;
+			margin: 0;
+			font-family: Helvetica, Arial, sans-serif;
+		}
+
+		span{
+			color: gray;
+		}
+
+		img{
+			position: absolute;
+			top: 10vh;
+			width: 20vw;
+			height: 24vw;
+			object-fit: cover;
+			border-radius: 10vw;
+			transition: filter 0.5s;
+		}
+
+		h2.name{
+			position: absolute;
+			top: calc(12vh + 24vw);
+		}
+
+		h2.kant{
+			left: 11vw;
+			transform: translateX(-50%);
+		}
+		
+		h2.socrates{
+			right: 11vw;
+			transform: translateX(50%);
+		}
+
+		#kant{
+			object-position: 50% 0%;
+			left: 1vw;
+			transition: filter 0.5s;
+			filter: sepia(100%) hue-rotate(190deg) saturate(0%);
+		}
+
+		#socrates{
+			right: 1vw;
+			filter: sepia(100%) hue-rotate(310deg) saturate(0%);
+		}
+
+		h1.topic{
+			position: absolute;
+			transform: translate(-50%, -50%);
+			top: 5vh;
+			left: 50%;
+			width: 90vw;
+			text-align: center;
+			font-size: 3.5vh;
+		}
+
+		div.container{
+			top: 10vh;
+			position: absolute;
+			width: 55vw;
+			left: 22.5vw;
+			height: 52vh;
+			overflow: hidden;
+		}
+
+		p#message{
+			top: 0;
+			position: absolute;
+			font-size: 3vh;
+			text-align: center;
+		}
+
+		@keyframes top2bottom{
+			0%{
+				top: 0%;
+				transform: translateY(0%);
+			}
+
+			100%{
+				top: 100%;
+				transform: translateY(-100%);
+			}
+		}
+
+		h1.hubheader{
+			position: absolute;
+			top: 67vh;
+			left: 5vw;
+			font-size: 10vh;
+			width: 35vw;
+		}
+
+		bar{
+			position: absolute;
+			top: 65vh;
+			left: 42vw;
+			width: 54vw;
+			height: 5vh;
+			border: 3px solid black;
+		}
+
+		bar filled{
+			position: absolute;
+			left: 0;
+			overflow: hidden;
+			width: 0%;
+			background: gray;
+			height: 100%;
+			transition: width 0.5s;
+		}
+
+		bar span{
+			color: black;
+			position: absolute;
+			left: 1vw;
+			top: 50%;
+			transform: translateY(-50%);
+			font-size: 1.5vh;
+			width: 20vw;
+		}
+
+		bar filled span{
+			color: white;
+		}
+
+		p.description{
+			position: absolute;
+			top: 72vh;
+			left: 42vw;
+			width: 54vw;
+			font-size: 2.25vh;
+		}
+
+		button#ticket{
+			padding: 0.75vh 2vh;
+			position: absolute;
+			top: 91vh;
+			left: 42vw;
+			font-size: 2vh;
+		}
+	</style>
+</head>
+<body>
+	<h1 class="topic">Topic: <span id="topic"></span></h1>
+	<div class="container"><p id="message"></p></div>
+	<img id="kant" class="portrait" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Kant5.jpg/800px-Kant5.jpg">
+	<h2 class="name kant">Kant</h2>
+	<img id="socrates" class="portrait" src="https://ih1.redbubble.net/image.5203358469.6714/flat,750x,075,f-pad,750x1000,f8f8f8.webp">
+	<h2 class="name socrates">Socrates</h2>
+	<h1 class="hubheader">Philosophy Club</h1>
+	<bar><span></span><filled><span></span></filled></bar>
+	<p class="description">Pay tickets to open the cup of wisdom, to receive brain-ness. Every ticket paid to wisedom is a dollar towards procuring the sum of money so Upamanyu may grace the Davidson Academy Philosophy Club with his presence and a 30 minute talk. Upamanyu Dutta named his price: $51 to do anything for 30 minutes. Every ticket past 51 goes towards paying University of Toronto Professor Emeritus, renowned political commentator, the intellectual voice of the people, and 5 times sexiest man alive, Dr. Jordan Bernt Peterson to come give a talk at the Philosophy Club.</p>
+	<button id="ticket">1 Ticket: Open Cup of Wisdom</button>
+	<script>
+		var bought = parseInt(localStorage.getItem("bought") ?? "0");
+		var socket = io();
+
+		setBought();
+
+		document.getElementById("ticket").addEventListener("click", function(){
+			bought++;
+			setBought();
+		});
+
+		var melem = document.getElementById("message");
+		var kant = document.getElementById("kant");
+		var socrates = document.getElementById("socrates");
+
+		var filters = { kant: "sepia(100%) hue-rotate(190deg) saturate(300%)", socrates: "sepia(100%) hue-rotate(310deg) saturate(300%)" }
+		
+		socket.on("topic", (topic) => document.getElementById("topic").innerText = topic);
+		socket.on("message", function(person, message, length){
+			var name = person[0].toUpperCase() + person.substring(1);
+			melem.innerHTML = message.replaceAll("Dr. Lawhead", "<b>Dr. Lawhead</b>").replaceAll("Philosophy Club", "<b>Philosophy Club</b>");
+			melem.style.animation = ``;
+			setTimeout(() => melem.style.animation = `top2bottom ${length - 10}s 9s linear forwards`,  1000);
+			document.querySelectorAll("img.portrait").forEach((e) => e.style.filter = "saturate(0%)");
+			document.getElementById(person).style.filter = filters[person];
+		});
+
+		function setBought(){
+			document.querySelector("filled").style.width = `${bought / 0.51}%`;
+			document.querySelectorAll("bar span").forEach(e => e.innerText = `${bought}$/51$ for Upamanyu Dutta`);
+			localStorage.setItem("bought", bought.toString());
+		}
+	</script>
+</body>
+</html>
