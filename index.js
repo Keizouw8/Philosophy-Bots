@@ -14,21 +14,19 @@ var server = createServer(function(_, res){
 	createReadStream(join(import.meta.dirname, "index.html")).pipe(res);
 }).listen(port);
 var io = new Server(server);
-console.log("here");
 
 var current = await generate_conversation();
 run();
-console.log("here");
 
 
 function run(){
 	var speaker = new Speaker({ sampleRate: 24000, signed: true, bitDepth: 16, channels: 1 });
-	
+
 	var completed = 0;
-	
+
 	if(history.length == 1) io.emit("topic", topic.name );
 	io.emit("message", current.person, current.message, current.audio.length / 48000);
-	
+
 	speaker.end(current.audio);
 	speaker.on("flush", () => setTimeout(() => [setBot(false), ++completed == 2 && run()], 2000));
 
